@@ -231,8 +231,9 @@ All endpoints are under the base URL (default `https://api.ads.openai.com/v1`).
 
 ## Roadmap
 
-- ✍️ **Write actions** — create/update campaigns, ad groups, and ads (the HTTP client already supports `POST`; tools will be gated behind an explicit opt-in).
-- 🖼️ **Creative file uploads** (`POST /upload`).
+- ✍️ **Write actions** — create & update (via `POST`) campaigns, ad groups, and ads, plus the dedicated state transitions (`POST .../activate`, `.../pause`, `.../archive`). The HTTP client already supports `POST`; these will be gated behind an explicit opt-in, since they change delivery and spend.
+- 🖼️ **Creative uploads** — `POST /upload` (JSON `image_url` or `multipart/form-data`) to attach images to ad creatives.
+- 🌍 **Campaign targeting** — country include/exclude (`targeting.locations.countries`).
 - 📈 **Conversions API** support.
 - 🌐 **Remote/HTTP transport** for hosted deployments.
 - 📦 **Published npm release** so `npx -y openai-ads-mcp` works out of the box.
