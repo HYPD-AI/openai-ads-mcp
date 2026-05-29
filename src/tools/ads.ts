@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { OpenAIAdsClient } from "../client.js";
-import { paginationShape } from "../schemas.js";
+import { listParamsShape } from "../schemas.js";
 import { READ_ONLY_ANNOTATIONS, runTool } from "./result.js";
 
 export function registerAdTools(server: McpServer, client: OpenAIAdsClient): void {
@@ -10,15 +10,16 @@ export function registerAdTools(server: McpServer, client: OpenAIAdsClient): voi
     {
       title: "List ads",
       description:
-        "List ads in the ad account, optionally filtered to a single ad group. Each ad holds a " +
-        "creative (title, body, target URL, image) and a `review_status`. Supports cursor " +
-        "pagination (`first_id`, `last_id`, `has_more`).",
+        "List ads within an ad group (`ad_group_id` is required). Each ad holds a creative " +
+        "(title, body, target URL, image) and a `review_status` (in_review, approved, or " +
+        "rejected). Supports cursor pagination (`order`, `after`/`before`; the response includes " +
+        "`first_id`, `last_id`, and `has_more`).",
       inputSchema: {
         ad_group_id: z
           .string()
-          .optional()
-          .describe("Optional. Only return ads belonging to this ad group ID."),
-        ...paginationShape,
+          .min(1)
+          .describe("Parent ad group ID. Required — ads are listed within an ad group."),
+        ...listParamsShape(500),
       },
       annotations: READ_ONLY_ANNOTATIONS,
     },

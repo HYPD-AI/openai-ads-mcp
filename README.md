@@ -46,12 +46,12 @@ The [OpenAI Ads API](https://developers.openai.com/ads/api-quickstart) exposes a
 | `get_ad_group_insights` | Performance insights for one ad group.                                      |
 | `get_ad_insights`       | Performance insights for one ad.                                            |
 
-Insights tools accept `since` / `until` (YYYY-MM-DD), `time_granularity`, and `fields`.
+Insights tools accept `since`/`until` (YYYY-MM-DD) for the reporting window, plus `time_granularity` (`daily`/`none`), `aggregation_level`, `fields`, `sort`, `filters`, `limit` (1–10000), and `after`/`before` cursors.
 
 ## Prerequisites
 
 - **Node.js 20 or newer.**
-- **An OpenAI Ads API key.** Create one in the OpenAI Ads Manager. See the official [quickstart](https://developers.openai.com/ads/api-quickstart) and [authentication](https://developers.openai.com/ads/api-reference/authentication) docs. Each key is **scoped to a single ad account**.
+- **An OpenAI Ads API key.** Create an Ads account at [ads.openai.com](https://ads.openai.com) (currently **US-only**), then issue a key from **Settings** → [ads.openai.com/settings](https://ads.openai.com/settings). See the [quickstart](https://developers.openai.com/ads/api-quickstart) and [authentication](https://developers.openai.com/ads/api-reference/authentication) docs. Each key is **scoped to a single ad account**.
 
 ## Installation & configuration
 
@@ -141,13 +141,15 @@ See [`.env.example`](./.env.example).
 
 ## A note on "micros"
 
-The OpenAI Ads API expresses monetary values in **micros**:
+Fields whose names end in **`_micros`** — for example a campaign's `lifetime_spend_limit_micros` or an ad group's `max_bid_micros` — are expressed in micros:
 
 ```
 1,000,000 micros = 1 unit of the account's currency   (e.g. $1.00 = 1,000,000 micros)
 ```
 
-So a `lifetime_spend_limit_micros` of `50000000` is **$50.00**, and a `spend` of `1500000` is **$1.50**. Every tool that returns money mentions this, so the assistant will typically convert it for you. To go the other way, multiply the currency amount by 1,000,000.
+So a `lifetime_spend_limit_micros` of `25000000` is **$25.00**. Divide a `_micros` value by 1,000,000 to display a human amount, or multiply by 1,000,000 to convert the other way.
+
+> **Insights metrics are not micros.** Reporting values like `spend`, `cpc`, and `cpm` are already in the account's currency as decimals (e.g. `spend: 42.75` means $42.75).
 
 ## Read-only by design
 

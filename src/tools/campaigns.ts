@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { OpenAIAdsClient } from "../client.js";
-import { MICROS_NOTE, paginationShape } from "../schemas.js";
+import { MICROS_NOTE, listParamsShape } from "../schemas.js";
 import { READ_ONLY_ANNOTATIONS, runTool } from "./result.js";
 
 export function registerCampaignTools(server: McpServer, client: OpenAIAdsClient): void {
@@ -14,7 +14,7 @@ export function registerCampaignTools(server: McpServer, client: OpenAIAdsClient
         "objective, budget, and country targeting. Supports cursor pagination; the response " +
         "includes `first_id`, `last_id`, and `has_more`. " +
         MICROS_NOTE,
-      inputSchema: { ...paginationShape },
+      inputSchema: { ...listParamsShape(500) },
       annotations: READ_ONLY_ANNOTATIONS,
     },
     (args) =>

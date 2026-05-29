@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { OpenAIAdsClient } from "../client.js";
-import { MICROS_NOTE, paginationShape } from "../schemas.js";
+import { MICROS_NOTE, listParamsShape } from "../schemas.js";
 import { READ_ONLY_ANNOTATIONS, runTool } from "./result.js";
 
 export function registerAdGroupTools(server: McpServer, client: OpenAIAdsClient): void {
@@ -10,16 +10,17 @@ export function registerAdGroupTools(server: McpServer, client: OpenAIAdsClient)
     {
       title: "List ad groups",
       description:
-        "List ad groups in the ad account, optionally filtered to a single campaign. Ad groups " +
-        "belong to a campaign and hold the bidding configuration and context hints. Supports " +
-        "cursor pagination (`first_id`, `last_id`, `has_more`). " +
+        "List ad groups within a campaign (`campaign_id` is required). Ad groups belong to a " +
+        "campaign and hold the bidding configuration and context hints. Supports cursor " +
+        "pagination (`order`, `after`/`before`; the response includes `first_id`, `last_id`, and " +
+        "`has_more`). " +
         MICROS_NOTE,
       inputSchema: {
         campaign_id: z
           .string()
-          .optional()
-          .describe("Optional. Only return ad groups belonging to this campaign ID."),
-        ...paginationShape,
+          .min(1)
+          .describe("Parent campaign ID. Required — ad groups are listed within a campaign."),
+        ...listParamsShape(500),
       },
       annotations: READ_ONLY_ANNOTATIONS,
     },
