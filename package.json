@@ -1,0 +1,66 @@
+{
+  "name": "openai-ads-mcp",
+  "version": "0.1.0",
+  "description": "Model Context Protocol (MCP) server for the OpenAI Ads (Advertiser) API. Read-only access to campaigns, ad groups, ads, and insights.",
+  "type": "module",
+  "license": "MIT",
+  "author": "HYPD AI",
+  "homepage": "https://github.com/hypd-ai/openai-ads-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hypd-ai/openai-ads-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hypd-ai/openai-ads-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "modelcontextprotocol",
+    "openai",
+    "openai-ads",
+    "ads",
+    "advertising",
+    "chatgpt-ads",
+    "claude",
+    "llm"
+  ],
+  "bin": {
+    "openai-ads-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.1",
+    "eslint": "^10.4.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.7"
+  }
+}
