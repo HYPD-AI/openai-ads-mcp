@@ -55,9 +55,11 @@ Insights tools accept `since`/`until` (YYYY-MM-DD) for the reporting window, plu
 
 ## Installation & configuration
 
-MCP clients launch the server as a subprocess and pass your API key via an environment variable. Add the snippet for your client below.
+MCP clients launch the server as a subprocess and pass your API key via an environment variable.
 
-> **Until the first npm release**, install from source and point your client at the built file — see [Running from source](#running-from-source). After publishing, the `npx` snippets below work as-is.
+> **Not on npm yet.** Until the first npm release, the snippets below use the GitHub spec `github:HYPD-AI/openai-ads-mcp`, which `npx` fetches and builds for you — nothing to clone or install. The **first** launch builds from source and can take ~a minute; if your client times out waiting, warm it once in a terminal with `OPENAI_ADS_API_KEY=your-key npx -y github:HYPD-AI/openai-ads-mcp`, or use [Running from source](#running-from-source) for instant startup. Once the package is published to npm, replace `github:HYPD-AI/openai-ads-mcp` with `openai-ads-mcp`.
+
+Add the snippet for your client below.
 
 ### Claude Desktop
 
@@ -71,7 +73,7 @@ Edit your `claude_desktop_config.json`:
   "mcpServers": {
     "openai-ads": {
       "command": "npx",
-      "args": ["-y", "openai-ads-mcp"],
+      "args": ["-y", "github:HYPD-AI/openai-ads-mcp"],
       "env": {
         "OPENAI_ADS_API_KEY": "your-openai-ads-api-key"
       }
@@ -91,7 +93,7 @@ Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per-project):
   "mcpServers": {
     "openai-ads": {
       "command": "npx",
-      "args": ["-y", "openai-ads-mcp"],
+      "args": ["-y", "github:HYPD-AI/openai-ads-mcp"],
       "env": {
         "OPENAI_ADS_API_KEY": "your-openai-ads-api-key"
       }
@@ -117,7 +119,7 @@ Add to `.vscode/mcp.json`. VS Code can prompt for the key and store it as a secr
   "servers": {
     "openai-ads": {
       "command": "npx",
-      "args": ["-y", "openai-ads-mcp"],
+      "args": ["-y", "github:HYPD-AI/openai-ads-mcp"],
       "env": {
         "OPENAI_ADS_API_KEY": "${input:openai_ads_api_key}"
       }
@@ -128,7 +130,7 @@ Add to `.vscode/mcp.json`. VS Code can prompt for the key and store it as a secr
 
 ### Other MCP clients
 
-Any client that speaks MCP over **stdio** works. Run `openai-ads-mcp` (or `node /path/to/dist/index.js`) with `OPENAI_ADS_API_KEY` set in the environment.
+Any client that speaks MCP over **stdio** works. Run `npx -y github:HYPD-AI/openai-ads-mcp` (or `node /path/to/dist/index.js`) with `OPENAI_ADS_API_KEY` set in the environment.
 
 ## Configuration
 
