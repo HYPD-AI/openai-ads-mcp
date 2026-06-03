@@ -1,10 +1,13 @@
 {
-  "name": "openai-ads-mcp",
+  "name": "@hypd-ai/openai-ads-mcp",
   "version": "0.1.0",
   "description": "Model Context Protocol (MCP) server for the OpenAI Ads (Advertiser) API. Read-only access to campaigns, ad groups, ads, and insights.",
   "type": "module",
   "license": "MIT",
   "author": "HYPD AI",
+  "publishConfig": {
+    "access": "public"
+  },
   "homepage": "https://github.com/hypd-ai/openai-ads-mcp#readme",
   "repository": {
     "type": "git",

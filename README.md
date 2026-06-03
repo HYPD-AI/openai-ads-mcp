@@ -57,7 +57,7 @@ Insights tools accept `since`/`until` (YYYY-MM-DD) for the reporting window, plu
 
 MCP clients launch the server as a subprocess and pass your API key via an environment variable.
 
-> **Not on npm yet.** Until the first npm release, the snippets below use the GitHub spec `github:HYPD-AI/openai-ads-mcp`, which `npx` fetches and builds for you — nothing to clone or install. The **first** launch builds from source and can take ~a minute; if your client times out waiting, warm it once in a terminal with `OPENAI_ADS_API_KEY=your-key npx -y github:HYPD-AI/openai-ads-mcp`, or use [Running from source](#running-from-source) for instant startup. Once the package is published to npm, replace `github:HYPD-AI/openai-ads-mcp` with `openai-ads-mcp`.
+> **Not on npm yet.** Until the first npm release, the snippets below use the GitHub spec `github:HYPD-AI/openai-ads-mcp`, which `npx` fetches and builds for you — nothing to clone or install. The **first** launch builds from source and can take ~a minute; if your client times out waiting, warm it once in a terminal with `OPENAI_ADS_API_KEY=your-key npx -y github:HYPD-AI/openai-ads-mcp`, or use [Running from source](#running-from-source) for instant startup. Once the package is published to npm, replace `github:HYPD-AI/openai-ads-mcp` with `@hypd-ai/openai-ads-mcp`.
 
 Add the snippet for your client below.
 
