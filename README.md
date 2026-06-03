@@ -2,6 +2,8 @@
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for the **OpenAI Ads (Advertiser) API**. It lets MCP-compatible clients — Claude Desktop, Cursor, VS Code, and others — read your OpenAI Ads campaigns, ad groups, ads, and performance insights through natural language.
 
+[![npm](https://img.shields.io/npm/v/@hypd-ai/openai-ads-mcp)](https://www.npmjs.com/package/@hypd-ai/openai-ads-mcp)
+[![CI](https://github.com/HYPD-AI/openai-ads-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/HYPD-AI/openai-ads-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20-43853d.svg)](https://nodejs.org)
 [![MCP](https://img.shields.io/badge/MCP-server-blue.svg)](https://modelcontextprotocol.io)
@@ -28,7 +30,7 @@ The [OpenAI Ads API](https://developers.openai.com/ads/api-quickstart) exposes a
 - **Clear errors** — HTTP status and the API error body are surfaced to the model instead of being swallowed.
 - **Micros-aware** — every tool description explains the [micros convention](#a-note-on-micros) so the assistant can present human-readable currency.
 - **Cursor pagination** passthrough (`limit`, `order`, `after`, `before`).
-- **Zero-install** via `npx` (after the first npm release), or run from source today.
+- **Zero-install** via `npx` — `npx -y @hypd-ai/openai-ads-mcp`, no clone or build.
 
 ## Tools
 
@@ -57,7 +59,7 @@ Insights tools accept `since`/`until` (YYYY-MM-DD) for the reporting window, plu
 
 MCP clients launch the server as a subprocess and pass your API key via an environment variable.
 
-> **Not on npm yet.** Until the first npm release, the snippets below use the GitHub spec `github:HYPD-AI/openai-ads-mcp`, which `npx` fetches and builds for you — nothing to clone or install. The **first** launch builds from source and can take ~a minute; if your client times out waiting, warm it once in a terminal with `OPENAI_ADS_API_KEY=your-key npx -y github:HYPD-AI/openai-ads-mcp`, or use [Running from source](#running-from-source) for instant startup. Once the package is published to npm, replace `github:HYPD-AI/openai-ads-mcp` with `@hypd-ai/openai-ads-mcp`.
+> **Published on npm** as [`@hypd-ai/openai-ads-mcp`](https://www.npmjs.com/package/@hypd-ai/openai-ads-mcp) — `npx` fetches it for you, so there's nothing to clone or build. To run the latest **unreleased** `main` instead, replace `@hypd-ai/openai-ads-mcp` with `github:HYPD-AI/openai-ads-mcp` (its first launch builds from source — see [Running from source](#running-from-source)).
 
 Add the snippet for your client below.
 
@@ -73,7 +75,7 @@ Edit your `claude_desktop_config.json`:
   "mcpServers": {
     "openai-ads": {
       "command": "npx",
-      "args": ["-y", "github:HYPD-AI/openai-ads-mcp"],
+      "args": ["-y", "@hypd-ai/openai-ads-mcp"],
       "env": {
         "OPENAI_ADS_API_KEY": "your-openai-ads-api-key"
       }
@@ -93,7 +95,7 @@ Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per-project):
   "mcpServers": {
     "openai-ads": {
       "command": "npx",
-      "args": ["-y", "github:HYPD-AI/openai-ads-mcp"],
+      "args": ["-y", "@hypd-ai/openai-ads-mcp"],
       "env": {
         "OPENAI_ADS_API_KEY": "your-openai-ads-api-key"
       }
@@ -119,7 +121,7 @@ Add to `.vscode/mcp.json`. VS Code can prompt for the key and store it as a secr
   "servers": {
     "openai-ads": {
       "command": "npx",
-      "args": ["-y", "github:HYPD-AI/openai-ads-mcp"],
+      "args": ["-y", "@hypd-ai/openai-ads-mcp"],
       "env": {
         "OPENAI_ADS_API_KEY": "${input:openai_ads_api_key}"
       }
@@ -130,7 +132,7 @@ Add to `.vscode/mcp.json`. VS Code can prompt for the key and store it as a secr
 
 ### Other MCP clients
 
-Any client that speaks MCP over **stdio** works. Run `npx -y github:HYPD-AI/openai-ads-mcp` (or `node /path/to/dist/index.js`) with `OPENAI_ADS_API_KEY` set in the environment.
+Any client that speaks MCP over **stdio** works. Run `npx -y @hypd-ai/openai-ads-mcp` (or `node /path/to/dist/index.js`) with `OPENAI_ADS_API_KEY` set in the environment.
 
 ## Configuration
 
