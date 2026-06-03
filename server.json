@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.hypd-ai/openai-ads-mcp",
+  "name": "io.github.HYPD-AI/openai-ads-mcp",
   "description": "Read-only MCP server for the OpenAI Ads API: campaigns, ad groups, ads, and insights.",
   "repository": {
     "url": "https://github.com/HYPD-AI/openai-ads-mcp",
     "source": "github"
   },
-  "version": "0.1.2",
+  "version": "0.1.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@hypd-ai/openai-ads-mcp",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "transport": {
         "type": "stdio"
       },
