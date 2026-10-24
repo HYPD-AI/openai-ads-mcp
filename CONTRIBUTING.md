@@ -44,7 +44,7 @@ Useful scripts:
 
 ## Write (mutating) actions
 
-This project is intentionally **read-only** today. If you want to contribute write actions (create/update/upload), please open an issue first. We want those gated behind an explicit opt-in and reviewed carefully, since they can change campaigns and spend real budget.
+This project is **read-only by default**, with an opt-in paused-creation workflow. Discuss extensions to mutating actions first. Preserve the opt-in and account-verification boundaries, strict payload validation, and stable create keys; test network failures and partial success. Activation, updates and irreversible actions require separate review.
 
 ## Code style
 

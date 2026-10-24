@@ -1,6 +1,6 @@
 # openai-ads-mcp
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for the **OpenAI Ads (Advertiser) API**. It lets MCP-compatible clients — Claude Desktop, Cursor, VS Code, and others — read your OpenAI Ads campaigns, ad groups, ads, and performance insights through natural language.
+A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for the **OpenAI Ads (Advertiser) API**. It lets MCP-compatible clients — Claude Desktop, Cursor, VS Code, and others — read OpenAI Ads data and, with explicit opt-in, create paused campaigns, ad groups, and ads through natural language.
 
 [![npm](https://img.shields.io/npm/v/@hypd-ai/openai-ads-mcp)](https://www.npmjs.com/package/@hypd-ai/openai-ads-mcp)
 [![CI](https://github.com/HYPD-AI/openai-ads-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/HYPD-AI/openai-ads-mcp/actions/workflows/ci.yml)
@@ -8,7 +8,7 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for the
 [![Node](https://img.shields.io/badge/node-%3E%3D20-43853d.svg)](https://nodejs.org)
 [![MCP](https://img.shields.io/badge/MCP-server-blue.svg)](https://modelcontextprotocol.io)
 
-> **Read-only.** This first release only **reads** data — it never creates, edits, or pauses anything and never spends budget. Write actions are on the [roadmap](#roadmap).
+> **Read-only by default.** The original 11 tools remain available with no configuration change. Set `OPENAI_ADS_ENABLE_WRITES=true` to add paused creation, image URL upload, and preview tools. This version has no activation, update, archive, or delete tools.
 >
 > **Unofficial.** This is a community project and is **not affiliated with or endorsed by OpenAI**. See the [disclaimer](#disclaimer).
 
@@ -16,7 +16,7 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for the
 
 ## Overview
 
-The [OpenAI Ads API](https://developers.openai.com/ads/api-quickstart) exposes an advertiser's account, campaigns, ad groups, ads, and reporting. This server wraps the read endpoints of that API as MCP tools so an AI assistant can answer questions like:
+The [OpenAI Ads API](https://developers.openai.com/ads/api-quickstart) exposes an advertiser's account, campaigns, ad groups, ads, and reporting. This server wraps that API as MCP tools. Read tools can answer questions like:
 
 - _"Is my OpenAI Ads API key working? What account is it tied to?"_
 - _"List my active campaigns and their budgets."_
@@ -26,8 +26,10 @@ The [OpenAI Ads API](https://developers.openai.com/ads/api-quickstart) exposes a
 ## Features
 
 - **11 read-only tools** covering the account, campaigns, ad groups, ads, and insights at every level.
+- **5 opt-in actions** for creating paused campaigns/ad groups/chat-card ads, uploading an image URL, and previewing an existing ad.
+- **Creation safeguards** — account verification, strict input validation, required create idempotency keys, and verification reads.
 - **Faithful responses** — the API's JSON is returned as-is, so nothing is lost in translation.
-- **Clear errors** — HTTP status and the API error body are surfaced to the model instead of being swallowed.
+- **Clear errors** — HTTP status and the API error body are surfaced; the configured credential is redacted from API/network errors.
 - **Micros-aware** — every tool description explains the [micros convention](#a-note-on-micros) so the assistant can present human-readable currency.
 - **Cursor pagination** passthrough (`limit`, `order`, `after`, `before`).
 - **Zero-install** via `npx` — `npx -y @hypd-ai/openai-ads-mcp`, no clone or build.
@@ -53,7 +55,7 @@ Insights tools accept `since`/`until` (YYYY-MM-DD) for the reporting window, plu
 ## Prerequisites
 
 - **Node.js 20 or newer.**
-- **An OpenAI Ads API key.** Create an Ads account at [ads.openai.com](https://ads.openai.com) (currently **US-only**), then issue a key from **Settings** → [ads.openai.com/settings](https://ads.openai.com/settings). See the [quickstart](https://developers.openai.com/ads/api-quickstart) and [authentication](https://developers.openai.com/ads/api-reference/authentication) docs. Each key is **scoped to a single ad account**.
+- **An OpenAI Ads API key.** Create an Ads account at [ads.openai.com](https://ads.openai.com), then issue a key from **Settings** → [ads.openai.com/settings](https://ads.openai.com/settings). See the [quickstart](https://developers.openai.com/ads/api-quickstart) and [authentication](https://developers.openai.com/ads/api-reference/authentication) docs. Each key is **scoped to a single ad account**.
 
 ## Installation & configuration
 
@@ -136,10 +138,11 @@ Any client that speaks MCP over **stdio** works. Run `npx -y @hypd-ai/openai-ads
 
 ## Configuration
 
-| Variable              | Required | Default                         | Description                                                |
-| --------------------- | -------- | ------------------------------- | ---------------------------------------------------------- |
-| `OPENAI_ADS_API_KEY`  | Yes      | —                               | Your OpenAI Ads API key, sent as a Bearer token.           |
-| `OPENAI_ADS_BASE_URL` | No       | `https://api.ads.openai.com/v1` | Override the API base URL (useful for testing or a proxy). |
+| Variable                   | Required | Default                         | Description                                                                          |
+| -------------------------- | -------- | ------------------------------- | ------------------------------------------------------------------------------------ |
+| `OPENAI_ADS_API_KEY`       | Yes      | —                               | Your OpenAI Ads API key, sent as a Bearer token.                                     |
+| `OPENAI_ADS_BASE_URL`      | No       | `https://api.ads.openai.com/v1` | Override the API base URL (useful for testing or a trusted proxy).                   |
+| `OPENAI_ADS_ENABLE_WRITES` | No       | `false`                         | Set `true` to expose the five actions. Other values besides true/false are rejected. |
 
 See [`.env.example`](./.env.example).
 
@@ -155,9 +158,47 @@ So a `lifetime_spend_limit_micros` of `25000000` is **$25.00**. Divide a `_micro
 
 > **Insights metrics are not micros.** Reporting values like `spend`, `cpc`, and `cpm` are already in the account's currency as decimals (e.g. `spend: 42.75` means $42.75).
 
-## Read-only by design
+## Opt-in paused creation
 
-This release registers **only read (`GET`) tools** — and each one is annotated with the MCP `readOnlyHint`, so well-behaved clients know it cannot mutate state. There is no tool here that can create, edit, pause, or delete anything, and nothing that can spend budget. Write actions will arrive as a deliberate, separately reviewed step (see [Roadmap](#roadmap)).
+Read-only mode exposes the original 11 tools and blocks POST requests at the HTTP client boundary. Opt in only for an account you intend to modify:
+
+```json
+{
+  "OPENAI_ADS_API_KEY": "your-openai-ads-api-key",
+  "OPENAI_ADS_ENABLE_WRITES": "true"
+}
+```
+
+Add the opt-in variable to your MCP client's server environment and restart/reconnect the server. Setting it enables actions; it is not per-request user approval. The assistant must first show and obtain approval of the account, currency, budget, targeting, destination, and creative. Existing pinned `0.1.x` releases remain read-only.
+
+| Additional tool   | Behavior                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `create_campaign` | Create a paused standard campaign with a daily **or** lifetime cap; clicks, impressions, or one standard conversion goal.      |
+| `create_ad_group` | Create a paused group; verify the parent campaign's objective, billing and strategy compatibility.                             |
+| `upload_image`    | Upload an approved public HTTP(S) image URL; return its account-scoped `file_id`. Local-file/multipart upload is not included. |
+| `create_ad`       | Create a paused `chat_card` with an image token, destination, title (3–50 characters), and body (up to 100).                   |
+| `preview_ad`      | Create a temporary preview of an existing same-account ad. This POST requires opt-in too.                                      |
+
+All five require `expected_ad_account_id`, copied from `get_ad_account`. Each call verifies that the configured key belongs to that approved account before acting. Keys are account-scoped; do not assume another connector sees the same account or currency. Each create additionally requires a caller-persisted `idempotency_key` (1–255 characters).
+
+Typical sequence:
+
+1. Read the account and confirm currency/timezone; prepare and approve the exact plan.
+2. Create the campaign with a stable key, then use its returned ID for the ad group and a distinct stable key.
+3. Upload the approved image (or reuse a `file_id` read from a same-account ad).
+4. Create the ad with another stable key, then request its preview.
+
+Each create defaults `status` to `paused` and rejects `active`. Paused resources are real saved resources, not a separate draft status. **Creating a paused ad still submits its creative for review.** No tool in this release activates delivery.
+
+Create responses are read back with serving issues. If verification fails after creation, the tool reports the created ID: inspect it rather than starting a duplicate. For an uncertain create, retry only the identical body with the identical key. The server forwards OpenAI's `Idempotency-Key` header; it does not persist an import manifest. Changed plans need renewed approval and a new key. There are no automatic POST retries. Image upload and preview have no idempotency guarantee.
+
+This first action set supports standard campaigns and chat cards. Product feeds, custom audiences, URL tracking templates, updates, and state transitions are deliberately excluded; unsupported body fields are rejected instead of silently dropped. Resolve geography into supported countries or verified OpenAI location IDs. Context hints are relevance descriptions, not Google keyword match types. Omitting targeting permits unrestricted targeting: approve that choice explicitly.
+
+For conversions, exactly one non-archived standard setting linked to one source must exist in this account. The tool searches paginated settings and rejects custom goals. OpenAI still validates source eligibility and whether conversion bidding is enabled. This server does not install tracking or provision keys. See the [public API specification](https://developers.openai.com/ads/openapi.json) and [conversion bidding guide](https://developers.openai.com/ads/conversion-optimized-campaigns).
+
+### Credentials for local testing
+
+Tests mock `fetch` and require no real key. For a separately approved live check, supply an **Advertiser API key**, not an OpenAI Platform/model API key. Keep it in the launching process's environment, a secret manager, or an ignored `.env.local` loaded by your launcher. This program does not automatically load dotenv files. Never paste keys into prompts, commits, issues, PRs, or shell command arguments/history. Read-only verification can start with `get_ad_account`; a live create requires approval of its exact payload even while paused.
 
 ## Running from source
 
@@ -235,12 +276,12 @@ All endpoints are under the base URL (default `https://api.ads.openai.com/v1`).
 
 ## Roadmap
 
-- ✍️ **Write actions** — create & update (via `POST`) campaigns, ad groups, and ads, plus the dedicated state transitions (`POST .../activate`, `.../pause`, `.../archive`). The HTTP client already supports `POST`; these will be gated behind an explicit opt-in, since they change delivery and spend.
-- 🖼️ **Creative uploads** — `POST /upload` (JSON `image_url` or `multipart/form-data`) to attach images to ad creatives.
-- 🌍 **Campaign targeting** — country include/exclude (`targeting.locations.countries`).
+- ✍️ **Further actions** — updates and explicitly authorized state transitions, with the same opt-in boundary.
+- 🖼️ **Local creative uploads** — multipart uploads; public image URL uploads are supported now.
+- 🌍 **Extended targeting** — audience support and additional targeting helpers; country and location-ID include/exclude are supported now.
 - 📈 **Conversions API** support.
 - 🌐 **Remote/HTTP transport** for hosted deployments.
-- 📦 **Published npm release** so `npx -y openai-ads-mcp` works out of the box.
+- 📦 **Release 0.2.0** after review. Preparing this PR does not publish to npm or the MCP registry.
 
 ## Contributing
 

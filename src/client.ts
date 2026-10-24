@@ -26,17 +26,18 @@ export class OpenAIAdsError extends Error {
 /**
  * Minimal typed HTTP client for the OpenAI Ads API.
  *
- * Only read (`GET`) operations are used by the tools shipped today. `post` is
- * implemented so that write tools (create/update/upload) can be layered on
- * cleanly when they land on the roadmap.
+ * GET is always available. POST requires an explicit write opt-in and is never
+ * automatically retried. Creation tools supply stable idempotency keys.
  */
 export class OpenAIAdsClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
+  readonly enableWrites: boolean;
 
   constructor(config: Config) {
     this.apiKey = config.apiKey;
     this.baseUrl = config.baseUrl;
+    this.enableWrites = config.enableWrites === true;
   }
 
   /** Issue a `GET` request and return the parsed JSON response. */
@@ -44,9 +45,27 @@ export class OpenAIAdsClient {
     return this.request<T>("GET", path, { query });
   }
 
-  /** Issue a `POST` request with a JSON body. Reserved for future write tools. */
-  post<T = unknown>(path: string, body?: unknown, query?: QueryParams): Promise<T> {
-    return this.request<T>("POST", path, { query, body });
+  assertWritesEnabled(): void {
+    if (!this.enableWrites) {
+      throw new Error("Actions are disabled. Set OPENAI_ADS_ENABLE_WRITES=true to opt in.");
+    }
+  }
+
+  /** POST is gated independently of tool registration. Never automatically retried. */
+  async post<T = unknown>(
+    path: string,
+    body?: unknown,
+    query?: QueryParams,
+    idempotencyKey?: string,
+  ): Promise<T> {
+    this.assertWritesEnabled();
+    if (
+      idempotencyKey !== undefined &&
+      (!/\S/.test(idempotencyKey) || idempotencyKey.length > 255 || /[\r\n]/.test(idempotencyKey))
+    ) {
+      throw new Error("Invalid Idempotency-Key.");
+    }
+    return this.request<T>("POST", path, { query, body, idempotencyKey });
   }
 
   private buildUrl(path: string, query?: QueryParams): string {
@@ -67,7 +86,7 @@ export class OpenAIAdsClient {
   private async request<T>(
     method: "GET" | "POST",
     path: string,
-    options: { query?: QueryParams; body?: unknown },
+    options: { query?: QueryParams; body?: unknown; idempotencyKey?: string },
   ): Promise<T> {
     const url = this.buildUrl(path, options.query);
     const headers: Record<string, string> = {
@@ -75,6 +94,7 @@ export class OpenAIAdsClient {
       Accept: "application/json",
       "User-Agent": `openai-ads-mcp/${VERSION}`,
     };
+    if (options.idempotencyKey) headers["Idempotency-Key"] = options.idempotencyKey;
 
     let body: string | undefined;
     if (options.body !== undefined) {
@@ -84,10 +104,20 @@ export class OpenAIAdsClient {
 
     let response: Response;
     try {
-      response = await fetch(url, { method, headers, body });
+      response = await fetch(url, {
+        method,
+        headers,
+        body,
+        redirect: "error",
+        signal: AbortSignal.timeout(30_000),
+      });
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      throw new OpenAIAdsError(0, `Network error calling ${method} ${path}: ${reason}`, undefined);
+      throw new OpenAIAdsError(
+        0,
+        `Network error calling ${method} ${path}: ${this.redact(reason)}`,
+        undefined,
+      );
     }
 
     const text = await response.text();
@@ -96,10 +126,17 @@ export class OpenAIAdsClient {
     if (!response.ok) {
       const message =
         extractErrorMessage(data) ?? `${response.status} ${response.statusText}`.trim();
-      throw new OpenAIAdsError(response.status, message, data ?? text);
+      const safeBody = safeJsonParse(this.redact(JSON.stringify(data ?? text)));
+      throw new OpenAIAdsError(response.status, this.redact(message), safeBody);
     }
 
     return data as T;
+  }
+
+  private redact(value: string): string {
+    return value
+      .replaceAll(this.apiKey, "[REDACTED]")
+      .replace(/Bearer\s+[^\s"\\]+/gi, "Bearer [REDACTED]");
   }
 }
 

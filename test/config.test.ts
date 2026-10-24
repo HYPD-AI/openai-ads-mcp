@@ -2,6 +2,17 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_BASE_URL, loadConfig } from "../src/config.js";
 
 describe("loadConfig", () => {
+  it("only enables actions on an explicit true value", () => {
+    expect(
+      loadConfig({ OPENAI_ADS_API_KEY: "key", OPENAI_ADS_ENABLE_WRITES: " true " }).enableWrites,
+    ).toBe(true);
+    expect(
+      loadConfig({ OPENAI_ADS_API_KEY: "key", OPENAI_ADS_ENABLE_WRITES: "false" }).enableWrites,
+    ).not.toBe(true);
+    expect(() =>
+      loadConfig({ OPENAI_ADS_API_KEY: "key", OPENAI_ADS_ENABLE_WRITES: "yes" }),
+    ).toThrow(/true or false/);
+  });
   it("throws when the API key is missing", () => {
     expect(() => loadConfig({})).toThrow(/OPENAI_ADS_API_KEY/);
   });

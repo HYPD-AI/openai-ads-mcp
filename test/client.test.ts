@@ -80,7 +80,7 @@ describe("OpenAIAdsClient.get", () => {
 describe("OpenAIAdsClient.post", () => {
   it("sends a JSON body with a content-type header", async () => {
     const fetchMock = mockFetch(new Response(JSON.stringify({ ok: true }), { status: 200 }));
-    const client = new OpenAIAdsClient(config);
+    const client = new OpenAIAdsClient({ ...config, enableWrites: true });
 
     await client.post("/campaigns", { name: "Test" });
 
@@ -88,5 +88,35 @@ describe("OpenAIAdsClient.post", () => {
     expect(init.method).toBe("POST");
     expect(init.headers["Content-Type"]).toBe("application/json");
     expect(init.body).toBe(JSON.stringify({ name: "Test" }));
+  });
+
+  it("blocks POST before fetch in read-only mode", async () => {
+    const fn = mockFetch(new Response("{}"));
+    await expect(new OpenAIAdsClient(config).post("/campaigns", {})).rejects.toThrow(/disabled/);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it("forwards a stable idempotency key and never retries a failed POST", async () => {
+    const fn = vi.fn().mockRejectedValue(new Error("connection lost"));
+    vi.stubGlobal("fetch", fn);
+    const client = new OpenAIAdsClient({ ...config, enableWrites: true });
+    await expect(client.post("/campaigns", {}, undefined, "import-campaign-1")).rejects.toThrow(
+      /connection lost/,
+    );
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn.mock.calls[0]![1].headers["Idempotency-Key"]).toBe("import-campaign-1");
+  });
+
+  it("redacts the configured key from API and network errors", async () => {
+    const fn = mockFetch(
+      new Response(JSON.stringify({ error: { message: "bad test-key", echoed: "test-key" } }), {
+        status: 400,
+      }),
+    );
+    const client = new OpenAIAdsClient(config);
+    const error = await client.get("/ad_account").catch((e: OpenAIAdsError) => e);
+    expect(JSON.stringify(error)).not.toContain("test-key");
+    fn.mockRejectedValueOnce(new Error("failed Bearer test-key"));
+    await expect(client.get("/ad_account")).rejects.toThrow(/\[REDACTED\]/);
   });
 });

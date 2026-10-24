@@ -4,6 +4,8 @@ export interface Config {
   apiKey: string;
   /** Base URL for the Ads API, normalized without a trailing slash. */
   baseUrl: string;
+  /** Mutating tools are absent unless explicitly enabled. */
+  enableWrites?: boolean;
 }
 
 /** Default base URL for the OpenAI Ads API. */
@@ -29,5 +31,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     "",
   );
 
-  return { apiKey, baseUrl };
+  const writes = env.OPENAI_ADS_ENABLE_WRITES?.trim().toLowerCase();
+  if (writes && writes !== "true" && writes !== "false") {
+    throw new Error("OPENAI_ADS_ENABLE_WRITES must be true or false.");
+  }
+  return { apiKey, baseUrl, ...(writes === "true" ? { enableWrites: true } : {}) };
 }
